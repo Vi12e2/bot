@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 87vh;
+            position: relative;
+            background-color: transparent;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 915px;
+            height: 100%; 
+            background-color: transparent;  
+        }
+        #chat-title {
+            position: absolute;
+            top: 12px;
+            left: 60px;
+            font-size: 21.5px;
+            background-color: transparent;
+            margin: 0;
+        }
+        #chatbox {
+            word-wrap: break-word;
+            width: 100%;
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+            box-sizing: border-box;
+            scrollbar-color: #ececec #FAFAFA;
+            background-color: #FAFAFA;
+        }
+        #msg-container {
+            display: flex;
+            width: 100%;
+            padding-left: 1px;
+            padding-right: 1px;
+            margin-top: 15px; /* Отступ сверху */
+            box-sizing: border-box;
+            background-color: transparent;
+        }
+        #msg {
+            word-wrap: break-word;
+            padding-left: 12px;
+            padding-right: 80px;
+            width: 100%;
+            height: 37.8px;
+            font-size: 18px;
+            border: 1px solid #424242;
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: #f2f2f2;
+        }
+        #send-btn {
+            position: absolute;
+            width: 70px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            background-color: transparent;
+            cursor: pointer;
+            border: none;
+            box-sizing: border-box;
+            display: none; /* Скрыть кнопку по умолчанию */
+        }
+        #send-btn:hover {
+            font-weight: 750;
+            background-color: transparent; /* изменить цвет кнопки при наведении */
+            border: transparent; /* изменить стиль границы при наведении */
+            
+        }
+        .user-msg:first-child {
+            margin-top: 10px; /* Отступ сверху для первого сообщения пользователя */
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .user-msg:not(:first-child),
+        .bot-msg {
+            margin: 20px 0; /* Увеличенный отступ для пробела между сообщениями */
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .dark-theme {
+            background-color: #303030;
+            color: #fff;
+        }
+        .dark-theme #chat-title {
+            color: #fff;
+            background-color: transparent;
+        }
+        .dark-theme #chatbox {
+            background-color: #393939;
+            color: #fff;
+            border: none;
+            scrollbar-color: #444 #393939;
+        }
+        .dark-theme #msg {
+            background-color: #555;
+            border: 1px solid #ccc;
+            color: #fff;
+        }
+        .dark-theme #container {
+            background-color: transparent;
+            input::placeholder {
+                /*color: #999; */
+              }
+        }
+        .dark-theme #send-btn {
+            background-color: #555;
+            color: #fff;
+            border: none;
+        }
+        .dark-theme .user-msg, .dark-theme .bot-msg {
+            color: #fff;
+        }
+        @media (max-width: 1450px) {
+            #chat-title {
+                display: none;
+            }
+            #send-btn {
+                display: block;
+            }
+            #msg-container {
+                margin-top: 15px;
+                padding-left: 2px;
+                padding-right: 2px;
+            }
+        }
+        @media (max-width: 600px) {
+            #chat-title {
+                display: none;
+            }
+            #container {
+                max-width: 100%;
+                height: 87vh;
+                padding: 0 10px 15px 10px; /* Отступ снизу для мобильных устройств */
+            }
+            #msg {
+            word-wrap: break-word;
+            padding-left: 10px;
+            padding-right: 10px;
+            }
+            #msg-container {
+                margin-top: 10px;
+                padding-left: 2px;
+                padding-right: 2px;
+            }
+            #send-btn {
+                display: none; /* Скрыть кнопку "Отправить" в мобильном режиме */
+            } 
+        } 
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2 id="chat-title">Chat with AI __</h2>
+        <div id="chatbox"></div>
+        <div id="msg-container">
+            <div style="position: relative; width: 100%;">
+            	<input type="text" id="msg" placeholder="Введите сообщение...">
+            	<button id="send-btn">... &nbsp></button>
+	    </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+         $(document).ready(function() {
+            function scrollChatbox() {
+                var chatbox = $('#chatbox');
+                var lastMessage = chatbox.children().last();
+                var scrollHeight = chatbox[0].scrollHeight;
+                var clientHeight = chatbox[0].clientHeight;
+                var messageHeight = lastMessage.outerHeight();
+                var newScrollTop = scrollHeight - clientHeight + messageHeight;
+                chatbox.scrollTop(newScrollTop);
+            }
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                $('body').addClass('dark-theme');
+                $('#chat-title, #chatbox, #msg, #send-btn').addClass('dark-theme');
+                $('.user-msg, .bot-msg').addClass('dark-theme');
+            }
+            $('#send-btn').click(function() {
+                var userText = $('#msg').val();
+                if (userText.trim() !== '') {
+                    $('#chatbox').append('<div class="user-msg"><strong>Вы:</strong> ' + userText + '</div>');
+                    $('#msg').val('');
+                    scrollChatbox();
+                    $.post('/get', {msg: userText}, function(data) {
+                        $('#chatbox').append('<div class="bot-msg"><strong>Бот:</strong> ' + data.response + '</div>');
+                        scrollChatbox();
+                    });
+                }
+            });
+
+            $('#msg').on('input', function() {
+                if ($(this).val().trim() !== '') {
+                    $('#send-btn').show();
+                } else {
+                    $('#send-btn').hide();
+                }
+            });
+
+            $('#msg').on('blur', function() {
+                if ($(this).val().trim() === '') {
+                    $('#send-btn').hide();
+                }
+            });
+            
+            $('#msg').on('keypress', function(e) {
+                if (e.which == 13) {
+                    $('#send-btn').click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
